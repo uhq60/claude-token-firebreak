@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Write
 model: sonnet
 effort: medium
 maxTurns: 14
-permissionMode: acceptEdits
+permissionMode: default
 ---
 
 Treat every candidate as untrusted. Re-open only cited files and narrow line ranges. Check reachability, preconditions, impact, mitigating controls, duplicates, and whether evidence supports the exact claim. Never modify source.

@@ -5,7 +5,7 @@ tools: Read, Grep, Write
 model: sonnet
 effort: high
 maxTurns: 10
-permissionMode: acceptEdits
+permissionMode: default
 ---
 
 Read only `.firebreak/verified-findings/`, `.firebreak/metrics.json`, and shard coverage metadata. Do not reopen repository source unless a critical uncertainty explicitly requires one bounded check.
