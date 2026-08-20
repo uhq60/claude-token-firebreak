@@ -1,43 +1,119 @@
-# Claude Audit Token Firebreak
+# Claude Token Firebreak
 
-A Claude Code package for very large repository audits. It prevents the main conversation from becoming a repository, log, and intermediate-result store.
+Un package Claude Code pour auditer de très grands dépôts sans transformer la conversation principale en entrepôt de code, logs et résultats intermédiaires. Il applique une barrière de contexte (« firebreak ») : l'inventaire est mécanique, le périmètre est découpé, les analyses sont isolées, les constats sont vérifiés, puis seule une synthèse bornée remonte à l'orchestrateur.
 
-## Installable package
+> Objectif : rendre les audits volumineux plus prévisibles et vérifiables. Les seuils du package sont des politiques locales, pas des limites ou garanties Anthropic.
 
-Download [claude-token-firebreak.zip](./claude-token-firebreak.zip), extract it at the root of the repository to audit, then follow the included installation and operating guides.
+## Ce que le package met en place
 
-## How it works
+- inventaire local avant tout appel LLM, avec exclusions configurables ;
+- sharding logique et limitation du nombre de shards traités ;
+- rôles séparés : `audit-scanner`, `audit-worker`, `audit-verifier` et `audit-synthesizer` ;
+- findings JSON validables, preuves localisées et sorties strictement bornées ;
+- artefacts intermédiaires stockés sous `.firebreak/`, hors de la conversation principale ;
+- hooks de filtrage des logs/tests, garde de grosses lectures et pré/post-compaction sans recopier les instructions utilisateur ;
+- Token Governor, télémétrie et benchmark A/B pour calibrer les seuils ;
+- flux conçu pour rester non destructif : les agents utilisent les permissions par défaut et leurs écritures doivent rester sous `.firebreak/`.
+
+## Architecture de l'audit
 
 ```text
-Repository -> mechanical inventory -> exclusions -> logical shards
-           -> isolated audit workers -> independent verification
-           -> deduplicated, bounded synthesis
+REPOSITORY
+  -> inventory (mécanique)
+  -> exclusions + shards
+  -> workers isolés
+  -> findings JSON + evidence sous .firebreak/
+  -> vérification indépendante
+  -> déduplication + synthèse bornée
 ```
 
-The main context receives only compact status, verified findings, coverage limitations, and artifact paths. Raw inventory, tool output, full evidence, and intermediate findings remain under `.firebreak/`.
+Cette architecture suit les capacités documentées de Claude Code : les subagents disposent d'un contexte isolé, les workflows JavaScript conservent les résultats intermédiaires dans le script plutôt que dans la conversation, et les hooks peuvent contrôler les outils ou filtrer leurs sorties.
 
-## Core controls
+## Prérequis
 
-- Mechanical inventory before LLM source analysis
-- Configurable directory/glob exclusions and secret-name protection
-- Logical sharding with file and byte limits
-- Separate scanner, worker, verifier, and synthesizer roles
-- JSON findings with bounded fields and externalized evidence
-- Guard hooks for oversized reads, broad listings, logs, and test output
-- Pre/Post compact checkpoints and a Token Governor
-- Telemetry, cache metrics, and A/B benchmark tooling
-- Non-destructive audit policy
+- Windows PowerShell ;
+- Python 3.9+ sans dépendance externe ;
+- Claude Code 2.1.154+ pour les dynamic workflows ;
+- accès Claude Code compatible avec les workflows.
 
-## Official Anthropic documentation
+## Démarrage
 
-The package is designed only from official Anthropic documentation:
+Suivez d'abord le [guide d'installation portable](docs/INSTALLATION.md), puis exécutez à la racine du dépôt audité :
 
-- [Claude Code costs](https://code.claude.com/docs/en/costs): context cost, usage, compaction, output filtering, and subagents.
-- [Context window](https://code.claude.com/docs/en/context-window): contextual growth from reads and isolated subagent contexts.
-- [Dynamic workflows](https://code.claude.com/docs/en/workflows): JavaScript orchestration, fan-out, and intermediate state outside the conversation.
-- [Subagents](https://code.claude.com/docs/en/sub-agents): delegated work with independent contexts.
-- [Hooks](https://code.claude.com/docs/en/hooks) and [hooks guide](https://code.claude.com/docs/en/hooks-guide): tool interception, output controls, and compaction lifecycle.
-- [Prompt caching](https://code.claude.com/docs/en/prompt-caching): cache reads/writes and reusable prompt prefixes.
-- [Memory / CLAUDE.md](https://code.claude.com/docs/en/memory), [status line](https://code.claude.com/docs/en/statusline), and [usage monitoring](https://code.claude.com/docs/en/monitoring-usage).
+```powershell
+python scripts/validate_package.py .
+python scripts/inventory.py . --config config/firebreak.json --out .firebreak/manifest.json
+python scripts/shard.py .firebreak/manifest.json --config config/firebreak.json --out .firebreak/shards
+```
 
-All local thresholds are package policies, not Anthropic limits or savings guarantees. Run the included A/B benchmark on a representative repository before relying on token or quality outcomes.
+Dans Claude Code, lancer :
+
+```text
+/token-firebreak auditer le dépôt pour les défauts de sécurité et de fiabilité
+```
+
+Le skill peut ensuite lancer le workflow réutilisable `/token-firebreak-audit`. Le workflow accepte un objet contenant `objective` et `maxShards`; la valeur par défaut est 10 shards afin de borner le coût.
+
+## Statut de validation
+
+- Validé localement : présence des 24 fichiers requis, syntaxe JSON/Python et smoke test inventaire/sharding.
+- Non validé dans cette version : exécution complète avec Claude Code, validation JSON Schema via `jsonschema` et mesure réelle des économies de tokens.
+- Statut : expérimental. Testez d'abord sur une copie ou un dépôt non sensible.
+
+## Utilisation responsable
+
+- Lancez d'abord le benchmark A/B sur un dépôt représentatif : aucune économie de tokens n'est présumée sans mesure.
+- Révisez les exclusions et les plafonds dans `config/firebreak.json` avant un audit de production.
+- N'incluez jamais de secrets dans les prompts, findings ou artefacts exportés.
+- Les fichiers sensibles courants (`.env`, clés privées, certificats et fichiers d'identifiants) sont exclus de l'inventaire par défaut.
+- Les sorties complètes de commandes ne sont pas persistées par défaut. L'option `store_full_tool_output` doit rester désactivée sauf besoin explicite et environnement maîtrisé.
+- Conservez `.firebreak/`, les sauvegardes de configuration et les exports d'usage hors de Git ; fusionnez les exclusions fournies dans le dépôt cible.
+- Exécutez Claude Code dans un environnement où le dépôt cible et `.firebreak/` peuvent être écrits ; les données intermédiaires restent locales au dépôt cible.
+
+## Livrables d’un audit
+
+```text
+.firebreak/
+├── manifest.json
+├── shards/
+├── raw-findings/
+├── verified-findings/
+├── rejected/
+├── evidence/
+├── tool-output/ (optionnel)
+├── reports/audit-report.md
+├── runtime.json
+└── metrics.json
+```
+
+Les seuils de [config/firebreak.json](config/firebreak.json) sont une politique locale, pas des limites Anthropic. Ils doivent être calibrés par un benchmark A/B.
+
+## Fondations officielles Anthropic
+
+Le package s'appuie exclusivement sur la documentation Anthropic ci-dessous :
+
+- [Gestion des coûts Claude Code](https://code.claude.com/docs/en/costs) : coût du contexte, `/usage`, compaction, filtres de sorties et subagents ;
+- [Fenêtre de contexte](https://code.claude.com/docs/en/context-window) : effet des lectures sur le contexte et isolation des subagents ;
+- [Dynamic workflows](https://code.claude.com/docs/en/workflows) : orchestration JavaScript, fan-out et conservation d'états hors conversation ;
+- [Subagents](https://code.claude.com/docs/en/sub-agents) : délégation et contextes séparés ;
+- [Hooks](https://code.claude.com/docs/en/hooks) et [guide des hooks](https://code.claude.com/docs/en/hooks-guide) : interception des outils, filtrage et cycle de compaction ;
+- [Prompt caching](https://code.claude.com/docs/en/prompt-caching) : cache reads/writes et structure de préfixe ;
+- [Mémoire CLAUDE.md](https://code.claude.com/docs/en/memory), [status line](https://code.claude.com/docs/en/statusline) et [monitoring d'usage](https://code.claude.com/docs/en/monitoring-usage).
+
+La liste annotée, avec le lien entre chaque source et son implémentation, est dans [docs/OFFICIAL-SOURCES.md](docs/OFFICIAL-SOURCES.md).
+
+## Documentation
+
+- [Runbook complet](TOKEN-FIREBREAK.md)
+- [Guide de fonctionnement détaillé](GUIDE-FONCTIONNEMENT.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Installation](docs/INSTALLATION.md)
+- [Benchmark A/B](docs/BENCHMARK.md)
+- [Sources Anthropic officielles](docs/OFFICIAL-SOURCES.md)
+- [Audit public et limites vérifiées](AUDIT.md)
+
+Les agents reçoivent l'instruction de ne pas modifier le code audité et utilisent `permissionMode: default`. Refusez toute demande d'écriture hors `.firebreak/` et vérifiez les changements Git après l'audit.
+
+## Licence
+
+Aucune licence de réutilisation n'est accordée tant qu'un fichier `LICENSE` n'est pas ajouté par le propriétaire.

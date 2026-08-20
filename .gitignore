@@ -1,3 +1,15 @@
+# Local audit artifacts
 .firebreak/
+
+# Python cache
 __pycache__/
 *.py[cod]
+
+# Local Claude Code agent state
+.claude/agent-memory-local/
+.claude/settings.before-firebreak.json
+
+# Local telemetry and benchmark exports
+otel-export*
+usage-export*
+benchmark-local*
