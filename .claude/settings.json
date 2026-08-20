@@ -1,0 +1,49 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/statusline.py\"",
+    "padding": 1
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Bash|PowerShell",
+        "hooks": [{
+          "type": "command",
+          "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard_large_reads.py\"",
+          "timeout": 10
+        }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [{
+          "type": "command",
+          "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/filter_test_output.py\"",
+          "timeout": 15
+        }]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [{
+          "type": "command",
+          "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/pre_compact.py\"",
+          "timeout": 10
+        }]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [{
+          "type": "command",
+          "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post_compact.py\"",
+          "timeout": 10
+        }]
+      }
+    ]
+  }
+}
