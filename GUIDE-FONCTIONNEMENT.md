@@ -184,9 +184,9 @@ Il peut :
 
 Lorsqu’une sortie dépasse la limite :
 
-1. l’intégralité est sauvegardée dans `.firebreak/tool-output/` ;
-2. Claude reçoit seulement un extrait borné ;
-3. pour les tests et logs, les lignes `FAIL`, `ERROR`, `WARN`, exceptions et traces sont privilégiées.
+1. Claude reçoit seulement un extrait borné ;
+2. pour les tests et logs, les lignes `FAIL`, `ERROR`, `WARN`, exceptions et traces sont privilégiées ;
+3. l’intégralité n’est sauvegardée dans `.firebreak/tool-output/` que si `store_full_tool_output` est explicitement activé après revue de sécurité.
 
 ### Hooks de compaction
 

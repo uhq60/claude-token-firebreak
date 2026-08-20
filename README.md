@@ -11,9 +11,9 @@ Un package Claude Code pour auditer de très grands dépôts sans transformer la
 - rôles séparés : `audit-scanner`, `audit-worker`, `audit-verifier` et `audit-synthesizer` ;
 - findings JSON validables, preuves localisées et sorties strictement bornées ;
 - artefacts intermédiaires stockés sous `.firebreak/`, hors de la conversation principale ;
-- hooks de filtrage des logs/tests, garde de grosses lectures et pré/post-compaction ;
+- hooks de filtrage des logs/tests, garde de grosses lectures et pré/post-compaction sans recopier les instructions utilisateur ;
 - Token Governor, télémétrie et benchmark A/B pour calibrer les seuils ;
-- mode non destructif : le dépôt audité n'est jamais modifié.
+- flux conçu pour rester non destructif : les agents utilisent les permissions par défaut et leurs écritures doivent rester sous `.firebreak/`.
 
 ## Architecture de l'audit
 
@@ -38,7 +38,7 @@ Cette architecture suit les capacités documentées de Claude Code : les subagen
 
 ## Démarrage
 
-Après installation à la racine du dépôt audité :
+Suivez d'abord le [guide d'installation portable](docs/INSTALLATION.md), puis exécutez à la racine du dépôt audité :
 
 ```powershell
 python scripts/validate_package.py .
@@ -54,11 +54,20 @@ Dans Claude Code, lancer :
 
 Le skill peut ensuite lancer le workflow réutilisable `/token-firebreak-audit`. Le workflow accepte un objet contenant `objective` et `maxShards`; la valeur par défaut est 10 shards afin de borner le coût.
 
+## Statut de validation
+
+- Validé localement : présence des 24 fichiers requis, syntaxe JSON/Python et smoke test inventaire/sharding.
+- Non validé dans cette version : exécution complète avec Claude Code, validation JSON Schema via `jsonschema` et mesure réelle des économies de tokens.
+- Statut : expérimental. Testez d'abord sur une copie ou un dépôt non sensible.
+
 ## Utilisation responsable
 
 - Lancez d'abord le benchmark A/B sur un dépôt représentatif : aucune économie de tokens n'est présumée sans mesure.
 - Révisez les exclusions et les plafonds dans `config/firebreak.json` avant un audit de production.
 - N'incluez jamais de secrets dans les prompts, findings ou artefacts exportés.
+- Les fichiers sensibles courants (`.env`, clés privées, certificats et fichiers d'identifiants) sont exclus de l'inventaire par défaut.
+- Les sorties complètes de commandes ne sont pas persistées par défaut. L'option `store_full_tool_output` doit rester désactivée sauf besoin explicite et environnement maîtrisé.
+- Conservez `.firebreak/`, les sauvegardes de configuration et les exports d'usage hors de Git ; fusionnez les exclusions fournies dans le dépôt cible.
 - Exécutez Claude Code dans un environnement où le dépôt cible et `.firebreak/` peuvent être écrits ; les données intermédiaires restent locales au dépôt cible.
 
 ## Livrables d’un audit
@@ -71,7 +80,7 @@ Le skill peut ensuite lancer le workflow réutilisable `/token-firebreak-audit`.
 ├── verified-findings/
 ├── rejected/
 ├── evidence/
-├── tool-output/
+├── tool-output/ (optionnel)
 ├── reports/audit-report.md
 ├── runtime.json
 └── metrics.json
@@ -101,5 +110,10 @@ La liste annotée, avec le lien entre chaque source et son implémentation, est 
 - [Installation](docs/INSTALLATION.md)
 - [Benchmark A/B](docs/BENCHMARK.md)
 - [Sources Anthropic officielles](docs/OFFICIAL-SOURCES.md)
+- [Audit public et limites vérifiées](AUDIT.md)
 
-Le package n’autorise aucune modification du code audité. Les agents écrivent uniquement sous `.firebreak/`.
+Les agents reçoivent l'instruction de ne pas modifier le code audité et utilisent `permissionMode: default`. Refusez toute demande d'écriture hors `.firebreak/` et vérifiez les changements Git après l'audit.
+
+## Licence
+
+Aucune licence de réutilisation n'est accordée tant qu'un fichier `LICENSE` n'est pas ajouté par le propriétaire.

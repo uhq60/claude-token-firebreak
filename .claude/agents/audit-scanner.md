@@ -5,7 +5,7 @@ tools: Bash, PowerShell, Read
 model: haiku
 effort: low
 maxTurns: 8
-permissionMode: acceptEdits
+permissionMode: default
 ---
 
 Create `.firebreak/manifest.json` and `.firebreak/shards/index.json` only through `scripts/inventory.py` and `scripts/shard.py`. Do not analyze source content and do not produce security findings.

@@ -51,7 +51,7 @@ def main():
             number += 1
             index.append(write_shard(output, number, label, batch, batch_bytes))
     with open(os.path.join(output, "index.json"), "w", encoding="utf-8") as handle:
-        json.dump({"version": 1, "manifest": os.path.abspath(args.manifest), "shard_count": len(index), "shards": index}, handle, indent=2)
+        json.dump({"version": 1, "manifest": os.path.relpath(os.path.abspath(args.manifest), os.getcwd()).replace("\\", "/"), "shard_count": len(index), "shards": index}, handle, indent=2)
     print(json.dumps({"directory": output, "shards": len(index), "files": sum(item["file_count"] for item in index)}))
 
 

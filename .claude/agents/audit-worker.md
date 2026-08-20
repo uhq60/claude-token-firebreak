@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash, PowerShell, Write
 model: sonnet
 effort: medium
 maxTurns: 20
-permissionMode: acceptEdits
+permissionMode: default
 ---
 
 Audit only files listed in the assigned shard JSON and only for the supplied objective. Never modify repository source, configuration, dependencies, or tests.

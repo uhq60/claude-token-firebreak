@@ -52,7 +52,7 @@ La statusline lit les compteurs live de Claude Code et écrit `.firebreak/runtim
 | BLOCK | 30–49 % | bloquer les recherches globales et borner Grep |
 | COMPACT | ≥50 % | bloquer de nouvelles lectures du dépôt ; checkpoint puis `/compact` ou nouvelle session |
 
-Les fichiers directs de plus de 200 000 octets sont refusés sans limite de lignes. Les sorties de commandes dépassant 12 000 caractères sont sauvegardées sous `.firebreak/tool-output/` puis remplacées par un extrait. Les tests et logs privilégient les lignes FAIL/ERROR/WARN.
+Les fichiers directs de plus de 200 000 octets sont refusés sans limite de lignes. Les sorties de commandes dépassant 12 000 caractères sont remplacées par un extrait et ne sont pas persistées par défaut. Activez `store_full_tool_output` uniquement si le stockage local des commandes, stdout et stderr complets respecte votre politique de sécurité. Les tests et logs privilégient les lignes FAIL/ERROR/WARN.
 
 ## 6. Raisonnement gradué
 

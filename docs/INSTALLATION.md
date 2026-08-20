@@ -11,15 +11,15 @@ Dynamic workflows : Claude Code 2.1.154 ou version ultérieure. Python 3.9+ est 
 
 ## 2. Sauvegarde
 
-Si le dépôt cible possède déjà `.claude/settings.json`, en faire une copie avant installation. Ne pas écraser ses hooks, permissions ou variables : fusionner uniquement `statusLine` et les quatre groupes de hooks du package.
+Si le dépôt cible possède déjà `.claude/settings.json`, en faire une copie hors du dépôt avant installation. Ne pas écraser ses hooks, permissions ou variables : fusionner uniquement `statusLine` et les quatre groupes de hooks du package.
 
 ```powershell
-Copy-Item -LiteralPath 'C:\mon-projet\.claude\settings.json' -Destination 'C:\mon-projet\.claude\settings.before-firebreak.json' -ErrorAction SilentlyContinue
+Copy-Item -LiteralPath 'C:\mon-projet\.claude\settings.json' -Destination 'C:\sauvegardes-firebreak\settings.json' -ErrorAction SilentlyContinue
 ```
 
 ## 3. Copie
 
-Depuis `C:\codex\skill\coding\claude-token-firebreak`, copier dans la racine du dépôt audité :
+Copier le package téléchargé dans la racine du dépôt audité. Conserver au minimum :
 
 - `.claude\agents`
 - `.claude\hooks`
@@ -28,6 +28,8 @@ Depuis `C:\codex\skill\coding\claude-token-firebreak`, copier dans la racine du 
 - `.claude\statusline.py`
 - `config`, `schemas`, `scripts`
 - `TOKEN-FIREBREAK.md`
+- `README.md`, `GUIDE-FONCTIONNEMENT.md`, `docs`
+- `.gitignore` (ou fusionner ses exclusions avec le fichier existant)
 
 Copier `.claude/settings.json` seulement si le dépôt n’en possède pas. Sinon fusionner sa configuration avec le fichier existant.
 
@@ -45,8 +47,8 @@ Puis ouvrir Claude Code, accepter la confiance du projet et lancer `/token-fireb
 
 ## 5. Données locales
 
-Ajouter `.firebreak/` à `.gitignore` lorsque les preuves, sorties ou chemins ne doivent pas être versionnés. Vérifier la politique interne avant d’activer OpenTelemetry : l’export est optionnel et dirigé vers votre propre backend.
+Exclure obligatoirement `.firebreak/`, les sauvegardes de configuration, les caches Python et les exports locaux d’usage/benchmark. Le `.gitignore` fourni couvre ces chemins ; fusionner ses règles si le dépôt cible possède déjà ce fichier. Vérifier la politique interne avant d’activer OpenTelemetry : l’export est optionnel et dirigé vers votre propre backend.
 
 ## Désinstallation
 
-Restaurer `settings.before-firebreak.json`, puis retirer uniquement les fichiers copiés ci-dessus. Les résultats d’audit sous `.firebreak/` ne sont pas supprimés automatiquement.
+Restaurer la sauvegarde externe de `settings.json`, puis retirer uniquement les fichiers copiés ci-dessus. Les résultats d’audit sous `.firebreak/` ne sont pas supprimés automatiquement.

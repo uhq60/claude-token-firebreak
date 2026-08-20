@@ -39,6 +39,7 @@ def main():
     config = read_json(os.path.abspath(args.config))
     excluded_dirs = set(config.get("exclude_dirs", []))
     excluded_globs = config.get("exclude_globs", [])
+    excluded_sensitive_globs = config.get("exclude_sensitive_globs", [])
     sensitive_patterns = [value.lower() for value in config.get("sensitive_name_patterns", [])]
     markers = config.get("generated_markers", [])
     max_bytes = int(config.get("max_file_bytes", 200000))
@@ -62,6 +63,12 @@ def main():
                 exclusions["glob"] += 1
                 if len(excluded_sample) < 200:
                     excluded_sample.append({"path": relative, "reason": f"glob:{pattern}"})
+                continue
+            sensitive_pattern = matches_glob(relative, name, excluded_sensitive_globs)
+            if sensitive_pattern:
+                exclusions["sensitive"] += 1
+                if len(excluded_sample) < 200:
+                    excluded_sample.append({"path": relative, "reason": "sensitive-name"})
                 continue
             try:
                 size = os.path.getsize(absolute)
@@ -101,12 +108,13 @@ def main():
     largest.sort(reverse=True)
     manifest = {
         "version": 1,
-        "root": root,
+        "root": ".",
         "created_at": time.time(),
         "policy": {
             "max_file_bytes": max_bytes,
             "exclude_dirs": sorted(excluded_dirs),
-            "exclude_globs": excluded_globs
+            "exclude_globs": excluded_globs,
+            "exclude_sensitive_globs": excluded_sensitive_globs
         },
         "summary": {
             "included_files": len(files),

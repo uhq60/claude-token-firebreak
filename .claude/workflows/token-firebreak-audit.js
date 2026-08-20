@@ -8,19 +8,20 @@ const objective = options.objective || 'Audit for correctness, security, reliabi
 const maxShards = Math.max(1, Math.min(Number(options.maxShards || 10), 20))
 
 const findingProperties = {
-  id: { type: 'string', maxLength: 80 },
+  id: { type: 'string', pattern: '^[A-Z0-9][A-Z0-9._-]{2,79}$' },
   status: { type: 'string', enum: ['candidate', 'confirmed', 'rejected', 'uncertain'] },
   severity: { type: 'string', enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'] },
   confidence: { type: 'number', minimum: 0, maximum: 1 },
-  category: { type: 'string', maxLength: 80 },
-  file: { type: 'string', maxLength: 500 },
+  category: { type: 'string', minLength: 1, maxLength: 80 },
+  file: { type: 'string', minLength: 1, maxLength: 500 },
   lines: { type: 'string', maxLength: 40 },
-  finding: { type: 'string', maxLength: 1000 },
-  evidence: { type: 'string', maxLength: 2000 },
+  finding: { type: 'string', minLength: 1, maxLength: 1000 },
+  evidence: { type: 'string', minLength: 1, maxLength: 2000 },
   evidence_path: { type: ['string', 'null'], maxLength: 500 },
-  impact: { type: 'string', maxLength: 800 },
-  recommended_action: { type: 'string', maxLength: 1000 },
+  impact: { type: 'string', minLength: 1, maxLength: 800 },
+  recommended_action: { type: 'string', minLength: 1, maxLength: 1000 },
   verification: { type: ['string', 'null'], maxLength: 1000 },
+  cwe: { type: ['string', 'null'], pattern: '^(CWE-[0-9]+)?$' },
   shard: { type: ['string', 'null'], maxLength: 120 },
 }
 const findingRequired = ['id', 'status', 'severity', 'confidence', 'category', 'file', 'lines', 'finding', 'evidence', 'impact', 'recommended_action']
