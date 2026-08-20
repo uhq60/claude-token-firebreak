@@ -1,0 +1,9 @@
+# Local audit artifacts
+.firebreak/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local Claude Code agent state
+.claude/agent-memory-local/
