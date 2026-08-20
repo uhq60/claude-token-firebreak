@@ -1,4 +1,4 @@
-# Claude Token Firebreak
+# Claude Audit Token Firebreak
 
 A Claude Code package for very large repository audits. It prevents the main conversation from becoming a repository, log, and intermediate-result store.
 
